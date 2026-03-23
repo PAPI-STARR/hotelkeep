@@ -1,0 +1,578 @@
+[index.html (2).html](https://github.com/user-attachments/files/26181448/index.html.2.html)
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>HotelKeep</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+:root{--bg:#0f0f1a;--bg2:#16162a;--bg3:#1e1e35;--card:#1a1a30;--border:rgba(255,255,255,0.08);--text:#f0f0f8;--text2:#8888aa;--accent:#6c63ff;--green:#00d4aa;--yellow:#ffd166;--red:#ff6b6b;--blue:#4cc9f0;--orange:#ff9f43;--radius:16px;--radius-sm:10px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+#auth-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:linear-gradient(160deg,#0f0f1a 0%,#1a0a2e 100%)}
+.auth-logo{font-size:42px;margin-bottom:8px}.auth-title{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}.auth-sub{color:var(--text2);font-size:14px;margin-bottom:40px}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;width:100%;max-width:360px}
+.auth-card h2{font-size:18px;font-weight:600;margin-bottom:20px;text-align:center}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field select option{background:var(--bg3)}.field textarea{resize:none}
+.btn-primary{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s;margin-top:6px}
+.btn-primary:active{transform:scale(.98);opacity:.9}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--text2)}
+.auth-switch a{color:var(--accent);cursor:pointer;font-weight:500}
+#app{display:none;min-height:100vh;flex-direction:column}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:10px}
+.header-title{font-size:17px;font-weight:700}
+.header-right{display:flex;align-items:center;gap:12px}
+.btn-icon{background:var(--bg3);border:1px solid var(--border);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px}
+.user-badge{font-size:12px;color:var(--text2);font-weight:500}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;display:inline-block;margin-right:4px}
+.content{flex:1;padding:20px 16px 100px;max-width:600px;margin:0 auto;width:100%}
+.page{display:none}.page.active{display:block}
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.stat-num{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;line-height:1;margin-bottom:4px}
+.stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.stat-todo .stat-num{color:var(--yellow)}.stat-doing .stat-num{color:var(--blue)}.stat-done .stat-num{color:var(--green)}.stat-total .stat-num{color:var(--text)}
+.filter-tabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.filter-tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg3);border:1px solid var(--border);color:var(--text2);transition:all .2s;white-space:nowrap}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.rooms-grid{display:flex;flex-direction:column;gap:10px}
+.room-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .15s;position:relative;overflow:hidden}
+.room-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.room-card.todo::before{background:var(--yellow)}.room-card.cleaning::before{background:var(--blue)}.room-card.done::before{background:var(--green)}.room-card.blocked::before{background:var(--red)}.room-card.checkout::before{background:var(--orange)}
+.room-card:active{transform:scale(.98)}
+.room-number{font-size:28px;font-weight:700;font-family:'DM Mono',monospace;min-width:56px;text-align:center;line-height:1}
+.room-info{flex:1}.room-type{font-size:14px;font-weight:600;margin-bottom:3px}
+.room-meta{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.status-badge{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.badge-todo{background:rgba(255,209,102,.15);color:var(--yellow)}.badge-cleaning{background:rgba(76,201,240,.15);color:var(--blue)}.badge-done{background:rgba(0,212,170,.15);color:var(--green)}.badge-blocked{background:rgba(255,107,107,.15);color:var(--red)}.badge-checkout{background:rgba(255,159,67,.15);color:var(--orange)}
+.pulse{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.assigned-to{font-size:10px;background:rgba(108,99,255,.15);color:var(--accent);padding:2px 7px;border-radius:10px;font-weight:500}
+.priority-high{font-size:10px;background:rgba(255,107,107,.15);color:var(--red);padding:2px 7px;border-radius:10px;font-weight:600}
+.fault-badge{font-size:10px;background:rgba(255,159,67,.15);color:var(--orange);padding:2px 7px;border-radius:10px;font-weight:500}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border-top:1px solid var(--border);border-radius:24px 24px 0 0;padding:20px 20px 36px;width:100%;max-width:600px;margin:0 auto;animation:slideUp .3s ease;max-height:92vh;overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.modal-tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--bg3);border-radius:var(--radius-sm);padding:4px}
+.modal-tab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;border-radius:8px;color:var(--text2);transition:all .2s}
+.modal-tab.active{background:var(--accent);color:#fff}
+.modal-section{display:none}.modal-section.active{display:block}
+.modal-room-num{font-size:44px;font-weight:700;font-family:'DM Mono',monospace;line-height:1;margin-bottom:2px}
+.modal-room-type{font-size:15px;color:var(--text2);margin-bottom:12px}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.action-btn{padding:14px 10px;border-radius:var(--radius-sm);border:1px solid transparent;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s}
+.action-btn:active{transform:scale(.97)}
+.action-todo{background:rgba(255,209,102,.1);border-color:rgba(255,209,102,.3);color:var(--yellow)}
+.action-cleaning{background:rgba(76,201,240,.1);border-color:rgba(76,201,240,.3);color:var(--blue)}
+.action-done{background:rgba(0,212,170,.1);border-color:rgba(0,212,170,.3);color:var(--green);grid-column:1/-1;padding:16px;font-size:15px}
+.action-blocked{background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.3);color:var(--red)}
+.action-checkout{background:rgba(255,159,67,.1);border-color:rgba(255,159,67,.3);color:var(--orange)}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;cursor:pointer}
+.checklist-item.checked{background:rgba(0,212,170,.07);border-color:rgba(0,212,170,.2)}
+.checklist-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);flex-shrink:0;cursor:pointer}
+.checklist-item label{font-size:14px;cursor:pointer;flex:1}
+.checklist-item.checked label{text-decoration:line-through;color:var(--text2)}
+.progress-bar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+.fault-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.fault-text{flex:1;font-size:13px;line-height:1.5}
+.fault-meta{font-size:11px;color:var(--text2);margin-top:3px}
+.fault-priority{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;flex-shrink:0;white-space:nowrap}
+.fp-alta{background:rgba(255,107,107,.15);color:var(--red)}.fp-media{background:rgba(255,209,102,.15);color:var(--yellow)}.fp-bassa{background:rgba(0,212,170,.15);color:var(--green)}
+.section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:8px}
+.staff-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.staff-avatar{width:42px;height:42px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;color:#fff}
+.shift-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px}
+.shift-day{text-align:center}
+.shift-day-label{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;line-height:1.3}
+.shift-cell{height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2);transition:all .2s;user-select:none}
+.shift-cell.mattina{background:rgba(255,209,102,.15);border-color:rgba(255,209,102,.3);color:var(--yellow)}
+.shift-cell.pomeriggio{background:rgba(108,99,255,.15);border-color:rgba(108,99,255,.3);color:var(--accent)}
+.shift-cell.riposo{background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.2);color:var(--red)}
+.report-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+.report-title{font-size:14px;font-weight:600;margin-bottom:12px}
+.report-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.report-row:last-child{border-bottom:none}
+.report-row-label{font-size:13px;color:var(--text2)}
+.report-row-val{font-size:14px;font-weight:600;font-family:'DM Mono',monospace}
+.time-good{color:var(--green)}.time-avg{color:var(--yellow)}.time-slow{color:var(--red)}
+.rbar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rbar-name{font-size:12px;color:var(--text2);width:80px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rbar{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.rbar-fill{height:100%;border-radius:4px;transition:width .5s}
+.rbar-val{font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);flex-shrink:0;width:45px;text-align:right}
+.activity-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.activity-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.activity-text{font-size:13px;line-height:1.5;flex:1}
+.activity-time{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;flex-shrink:0;margin-top:2px}
+.assign-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.assign-section label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block}
+.assign-section select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-family:inherit;font-size:14px;outline:none}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;z-index:100;padding:6px 0 env(safe-area-inset-bottom);max-width:600px;margin:0 auto}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px;cursor:pointer;color:var(--text2);font-size:9px;font-weight:500;transition:color .2s}
+.nav-item.active{color:var(--accent)}.nav-icon{font-size:19px}
+.empty-state{text-align:center;padding:50px 20px;color:var(--text2)}
+.empty-state .emoji{font-size:48px;margin-bottom:12px}.empty-state p{font-size:14px}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:10px 20px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:500}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.modal-close{width:100%;padding:12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-family:inherit;font-size:14px;cursor:pointer;margin-top:8px}
+.setup-banner{background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.3);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--text2);line-height:1.6}
+.setup-banner strong{color:var(--accent)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div style="color:var(--text2);font-size:13px">Connessione in corso...</div>
+</div>
+<div id="auth-screen" style="display:none">
+  <div class="auth-logo">🏨</div>
+  <div class="auth-title">HotelKeep</div>
+  <div class="auth-sub">Housekeeping professionale</div>
+  <div class="auth-card" id="login-form">
+    <h2>Accedi</h2>
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="nome@hotel.it"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+    <button class="btn-primary" onclick="doLogin()">Accedi</button>
+    <div class="auth-switch">Non hai un account? <a onclick="showRegister()">Registrati</a></div>
+  </div>
+  <div class="auth-card" id="register-form" style="display:none">
+    <h2>Crea account</h2>
+    <div class="field"><label>Nome completo</label><input type="text" id="reg-name" placeholder="Mario Rossi"></div>
+    <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="nome@hotel.it"></div>
+    <div class="field"><label>Password</label><input type="password" id="reg-password" placeholder="min. 6 caratteri"></div>
+    <div class="field"><label>Telefono</label><input type="tel" id="reg-phone" placeholder="+39 333 000 0000"></div>
+    <div class="field"><label>Ruolo</label>
+      <select id="reg-role">
+        <option value="cameriera">👩‍🔧 Cameriera ai piani</option>
+        <option value="supervisore">👀 Supervisore</option>
+        <option value="manager">👨‍💼 Manager</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="doRegister()">Crea account</button>
+    <div class="auth-switch">Hai già un account? <a onclick="showLogin()">Accedi</a></div>
+  </div>
+</div>
+<div id="app" style="display:none">
+  <div class="header">
+    <div class="header-left"><span style="font-size:22px">🏨</span><div class="header-title">HotelKeep</div></div>
+    <div class="header-right">
+      <span class="user-badge"><span class="live-dot"></span><span id="user-name-badge">–</span></span>
+      <div class="btn-icon" onclick="doLogout()">🚪</div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="page active" id="page-rooms">
+      <div class="stats-bar">
+        <div class="stat-card stat-todo"><div class="stat-num" id="stat-todo">0</div><div class="stat-label">Da fare</div></div>
+        <div class="stat-card stat-doing"><div class="stat-num" id="stat-doing">0</div><div class="stat-label">In corso</div></div>
+        <div class="stat-card stat-done"><div class="stat-num" id="stat-done">0</div><div class="stat-label">Pulite</div></div>
+        <div class="stat-card stat-total"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Totale</div></div>
+      </div>
+      <div class="filter-tabs">
+        <div class="tab active" onclick="setFilter('all',this)">Tutte</div>
+        <div class="tab" onclick="setFilter('todo',this)">⚪ Da fare</div>
+        <div class="tab" onclick="setFilter('cleaning',this)">🔵 In pulizia</div>
+        <div class="tab" onclick="setFilter('done',this)">🟢 Pulite</div>
+        <div class="tab" onclick="setFilter('checkout',this)">🟠 Partenza</div>
+        <div class="tab" onclick="setFilter('blocked',this)">🔴 Fermata</div>
+      </div>
+      <div class="rooms-grid" id="rooms-list"></div>
+    </div>
+    <div class="page" id="page-staff">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="section-label" style="margin:0">👩‍🔧 Personale</div>
+        <button id="add-staff-btn" class="btn-secondary" style="display:none" onclick="toggleAddStaff()">+ Aggiungi</button>
+      </div>
+      <div id="add-staff-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px">
+        <div class="section-label" style="margin-bottom:12px">Nuova cameriera</div>
+        <div class="field"><label>Nome completo</label><input type="text" id="staff-name" placeholder="Maria Rossi"></div>
+        <div class="field"><label>Telefono</label><input type="tel" id="staff-phone" placeholder="+39 333 000 0000"></div>
+        <div class="field"><label>Email</label><input type="email" id="staff-email" placeholder="maria@hotel.it"></div>
+        <div class="field"><label>Note</label><input type="text" id="staff-notes" placeholder="es: esperta suite..."></div>
+        <button class="btn-primary" onclick="addStaffMember()">✅ Salva cameriera</button>
+      </div>
+      <div id="staff-list"></div>
+    </div>
+    <div class="page" id="page-shifts">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="section-label" style="margin:0">📅 Turni settimanali</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-secondary" onclick="prevWeek()">‹</button>
+          <button class="btn-secondary" onclick="nextWeek()">›</button>
+        </div>
+      </div>
+      <div id="week-label" style="font-size:13px;color:var(--text2);margin-bottom:14px;text-align:center"></div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:3px;background:var(--yellow)"></div>Mattina</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></div>Pomeriggio</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:3px;background:var(--red)"></div>Riposo</div>
+      </div>
+      <div id="shifts-grid"></div>
+    </div>
+    <div class="page" id="page-reports">
+      <div class="section-label" style="margin-bottom:16px">📊 Report performance</div>
+      <div class="report-card">
+        <div class="report-title">⏱️ Tempo medio pulizia</div>
+        <div class="report-row"><span class="report-row-label">Camera standard / fermata</span><span class="report-row-val" id="rpt-avg-fermata">–</span></div>
+        <div class="report-row"><span class="report-row-label">Camera partenza / da capo</span><span class="report-row-val" id="rpt-avg-checkout">–</span></div>
+        <div class="report-row"><span class="report-row-label">Media generale</span><span class="report-row-val" id="rpt-avg-all">–</span></div>
+      </div>
+      <div class="report-card"><div class="report-title">👩‍🔧 Velocità per cameriera</div><div id="rpt-staff-bars"></div></div>
+      <div class="report-card">
+        <div class="report-title">📋 Riepilogo di oggi</div>
+        <div class="report-row"><span class="report-row-label">Camere completate oggi</span><span class="report-row-val" id="rpt-done-today">0</span></div>
+        <div class="report-row"><span class="report-row-label">Guasti aperti</span><span class="report-row-val" id="rpt-faults-open" style="color:var(--orange)">0</span></div>
+        <div class="report-row"><span class="report-row-label">Camere con note</span><span class="report-row-val" id="rpt-notes-count">0</span></div>
+        <div class="report-row"><span class="report-row-label">Ancora da fare</span><span class="report-row-val" id="rpt-todo-left" style="color:var(--yellow)">0</span></div>
+      </div>
+      <div class="report-card"><div class="report-title">🔧 Guasti aperti</div><div id="rpt-fault-list"></div></div>
+    </div>
+    <div class="page" id="page-activity">
+      <div class="section-label" style="margin-bottom:14px">📋 Log attività</div>
+      <div id="activity-list" style="display:flex;flex-direction:column;gap:8px"><div class="empty-state"><div class="emoji">📋</div><p>Nessuna attività ancora</p></div></div>
+    </div>
+    <div class="page" id="page-settings">
+      <div class="section-label" style="margin-bottom:16px">⚙️ Impostazioni</div>
+      <div id="manager-panel" style="display:none">
+        <div class="setup-banner"><strong>👨‍💼 Pannello Manager</strong><br>Gestisci camere e checklist.</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px">
+          <div class="section-label" style="margin-bottom:12px">➕ Aggiungi camera</div>
+          <div class="field"><label>Numero</label><input type="text" id="new-room-num" placeholder="101"></div>
+          <div class="field"><label>Tipo</label><select id="new-room-type"><option>Standard</option><option>Superior</option><option>Deluxe</option><option>Suite</option><option>Junior Suite</option></select></div>
+          <div class="field"><label>Piano</label><input type="number" id="new-room-floor" placeholder="1" min="0" max="30"></div>
+          <button class="btn-primary" onclick="addRoom()">Aggiungi camera</button>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px">
+          <div class="section-label" style="margin-bottom:12px">✅ Checklist camere</div>
+          <div id="checklist-template-list" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="new-checklist-item" placeholder="es: Cambia lenzuola" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-family:inherit;font-size:14px;outline:none">
+            <button class="btn-primary" style="width:auto;padding:10px 18px;margin:0" onclick="addChecklistTemplate()">+</button>
+          </div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px">
+          <div class="section-label" style="margin-bottom:10px">🏠 Camere</div>
+          <div id="rooms-admin-list" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">👤 Il mio account</div>
+        <div style="font-size:13px;color:var(--text2)" id="settings-user-info">–</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px">
+        <div style="font-size:13px;color:var(--text2);line-height:1.7"><strong style="color:var(--green)">🟢 Connesso a Supabase</strong><br>Realtime attivo — tutti i dispositivi si aggiornano istantaneamente.</div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-rooms" onclick="showPage('rooms')"><span class="nav-icon">🏠</span><span>Camere</span></div>
+    <div class="nav-item" id="nav-staff" onclick="showPage('staff')"><span class="nav-icon">👩‍🔧</span><span>Staff</span></div>
+    <div class="nav-item" id="nav-shifts" onclick="showPage('shifts')"><span class="nav-icon">📅</span><span>Turni</span></div>
+    <div class="nav-item" id="nav-reports" onclick="showPage('reports')"><span class="nav-icon">📊</span><span>Report</span></div>
+    <div class="nav-item" id="nav-activity" onclick="showPage('activity')"><span class="nav-icon">📋</span><span>Log</span></div>
+    <div class="nav-item" id="nav-settings" onclick="showPage('settings')"><span class="nav-icon">⚙️</span><span>Setup</span></div>
+  </div>
+</div>
+<div class="modal-overlay" id="room-modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:2px">
+      <div class="modal-room-num" id="modal-room-num">101</div>
+      <div id="modal-current-badge"></div>
+    </div>
+    <div class="modal-room-type" id="modal-room-type">Standard · Piano 1</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px" id="modal-assigned-info"></div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" onclick="switchModalTab('stato',this)">🔄 Stato</div>
+      <div class="modal-tab" onclick="switchModalTab('checklist',this)">✅ Check</div>
+      <div class="modal-tab" onclick="switchModalTab('note',this)">📝 Note</div>
+      <div class="modal-tab" onclick="switchModalTab('guasti',this)">🔧 Guasti</div>
+    </div>
+    <div class="modal-section active" id="msec-stato">
+      <div class="modal-actions" id="modal-actions"></div>
+      <div class="assign-section" id="assign-section" style="display:none">
+        <label>Assegna a cameriera</label>
+        <select id="assign-select"><option value="">— Non assegnata —</option></select>
+      </div>
+    </div>
+    <div class="modal-section" id="msec-checklist">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="progress-bar"><div class="progress-fill" id="checklist-bar" style="width:0%"></div></div>
+        <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);flex-shrink:0" id="checklist-pct">0/0</div>
+      </div>
+      <div id="checklist-items"></div>
+    </div>
+    <div class="modal-section" id="msec-note">
+      <div class="section-label" style="margin-bottom:8px">📝 Nota operativa</div>
+      <textarea id="modal-note" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;color:var(--text);font-family:inherit;font-size:14px;resize:none;height:90px;outline:none;margin-bottom:14px" placeholder="es: Cliente allergia profumi, asciugamani extra..."></textarea>
+      <div class="section-label" style="margin-bottom:8px">📜 Storico note</div>
+      <div id="modal-notes-history" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <div class="modal-section" id="msec-guasti">
+      <div class="section-label" style="margin-bottom:8px">🔧 Segnala guasto</div>
+      <div class="field"><textarea id="fault-desc" placeholder="es: Perdita rubinetto, lampadina fulminata..." style="height:70px"></textarea></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <select id="fault-priority" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none">
+          <option value="alta">🔴 Priorità Alta</option>
+          <option value="media" selected>🟡 Priorità Media</option>
+          <option value="bassa">🟢 Priorità Bassa</option>
+        </select>
+        <button class="btn-primary" style="width:auto;padding:10px 16px;margin:0;font-size:13px" onclick="addFault()">Segnala</button>
+      </div>
+      <div class="section-label" style="margin-bottom:8px">Guasti attivi</div>
+      <div id="faults-list"></div>
+    </div>
+    <button class="btn-primary" onclick="saveModalChanges()" style="margin-top:14px">✅ Salva tutto</button>
+    <button class="modal-close" onclick="closeModal()">Chiudi</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const SUPABASE_URL='https://gkzgcqfzpdpqsdbytgss.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdremdjcWZ6cGRwcXNkYnl0Z3NzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNDgzMTMsImV4cCI6MjA4OTgyNDMxM30.C44ymJFcMmfoeoKRl67VDqt9-sbRRhaZdHE6xhB132c';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null,currentRole=null,currentFilter='all';
+let rooms={},staffMembers={},activityLog=[],shifts={},checklistTemplate=[],faults={},notesHistory={};
+let modalRoomId=null,modalPendingStatus=null,currentWeekOffset=0;
+const DAYS=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+const SHIFT_CYCLE=['off','mattina','pomeriggio','riposo'];
+const SL={todo:{label:'Da fare',icon:'⚪',cls:'todo',badge:'badge-todo'},cleaning:{label:'In pulizia',icon:'🔵',cls:'cleaning',badge:'badge-cleaning'},done:{label:'Pulita',icon:'🟢',cls:'done',badge:'badge-done'},blocked:{label:'Fermata',icon:'🔴',cls:'blocked',badge:'badge-blocked'},checkout:{label:'Partenza',icon:'🟠',cls:'checkout',badge:'badge-checkout'}};
+window.addEventListener('DOMContentLoaded',async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){await loadProfile(session.user);showApp();}else showAuthScreen();
+  sb.auth.onAuthStateChange(async(_,session)=>{if(session){await loadProfile(session.user);showApp();}else showAuthScreen();});
+});
+async function loadProfile(user){
+  const{data}=await sb.from('users').select('*').eq('id',user.id).single();
+  if(data){currentUser={...data,id:user.id};currentRole=data.role;}
+  else{currentUser={id:user.id,email:user.email,name:user.email,role:'cameriera'};currentRole='cameriera';}
+}
+function showAuthScreen(){document.getElementById('loading').style.display='none';document.getElementById('auth-screen').style.display='flex';document.getElementById('app').style.display='none';}
+function showLogin(){document.getElementById('login-form').style.display='block';document.getElementById('register-form').style.display='none';}
+function showRegister(){document.getElementById('login-form').style.display='none';document.getElementById('register-form').style.display='block';}
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim(),pass=document.getElementById('login-password').value;
+  if(!email||!pass){showToast('⚠️ Compila tutti i campi');return;}
+  const{error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error)showToast('❌ '+error.message);
+}
+async function doRegister(){
+  const name=document.getElementById('reg-name').value.trim(),email=document.getElementById('reg-email').value.trim(),pass=document.getElementById('reg-password').value,phone=document.getElementById('reg-phone').value.trim(),role=document.getElementById('reg-role').value;
+  if(!name||!email||!pass){showToast('⚠️ Compila tutti i campi');return;}
+  const{data,error}=await sb.auth.signUp({email,password:pass});
+  if(error){showToast('❌ '+error.message);return;}
+  if(data.user)await sb.from('users').upsert({id:data.user.id,email,name,phone,role});
+  showToast('✅ Account creato! Controlla email per conferma.');
+}
+async function doLogout(){await sb.auth.signOut();}
+function showApp(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('user-name-badge').textContent=(currentUser.name||currentUser.email||'').split(' ')[0];
+  document.getElementById('settings-user-info').textContent=`${currentUser.name||'Utente'} · ${currentRole} · ${currentUser.email||''}`;
+  if(currentRole==='manager'||currentRole==='supervisore'){document.getElementById('manager-panel').style.display='block';document.getElementById('add-staff-btn').style.display='block';}
+  subscribeAll();
+}
+function subscribeAll(){
+  sb.channel('db-all')
+    .on('postgres_changes',{event:'*',schema:'public',table:'rooms'},()=>{ loadRooms(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'activity'},()=>{ loadActivity(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'staff'},()=>{ loadStaff(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'shifts'},()=>{ loadShifts(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'faults'},()=>{ loadFaults(); renderReports(); if(modalRoomId) renderFaultsList(modalRoomId); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'notes_history'},()=>{ loadNotesHistory(); })
+    .subscribe((status)=>{ console.log('Realtime status:', status); });
+  loadRooms();loadActivity();loadStaff();loadShifts();loadChecklistTemplate();loadFaults();loadNotesHistory();
+}
+async function loadRooms(){const{data}=await sb.from('rooms').select('*');rooms={};(data||[]).forEach(r=>{rooms[r.id]={...r,checklist:r.checklist||{}};});renderRooms();renderAdminRooms();updateStats();renderReports();}
+async function loadActivity(){const{data}=await sb.from('activity').select('*').order('ts',{ascending:false}).limit(80);activityLog=data||[];renderActivity();renderReports();}
+async function loadStaff(){const{data}=await sb.from('staff').select('*');staffMembers={};(data||[]).forEach(m=>{staffMembers[m.id]=m;});renderStaff();populateAssignSelect();renderShifts();}
+async function loadShifts(){const{data}=await sb.from('shifts').select('*');shifts={};(data||[]).forEach(s=>{shifts[s.id]=s.data||{};});renderShifts();}
+async function loadChecklistTemplate(){
+  const{data}=await sb.from('checklist_template').select('*').eq('id','default').single();
+  checklistTemplate=data?.items||[];
+  if(!checklistTemplate.length){
+    checklistTemplate=[{id:'c1',text:'Cambia lenzuola e federe'},{id:'c2',text:'Cambia asciugamani e teli'},{id:'c3',text:'Pulisci e disinfetta bagno'},{id:'c4',text:'Rifai il letto'},{id:'c5',text:'Passa aspirapolvere'},{id:'c6',text:'Pulisci specchi e superfici'},{id:'c7',text:'Svuota cestini'},{id:'c8',text:'Riordina minibar'},{id:'c9',text:'Controlla TV e telecomando'},{id:'c10',text:'Arieggia la stanza'}];
+    await sb.from('checklist_template').upsert({id:'default',items:checklistTemplate});
+  }
+  renderChecklistTemplate();
+}
+async function loadFaults(){const{data}=await sb.from('faults').select('*');faults={};(data||[]).forEach(f=>{faults[f.id]=f.items||[];});renderReports();renderRooms();}
+async function loadNotesHistory(){const{data}=await sb.from('notes_history').select('*');notesHistory={};(data||[]).forEach(n=>{notesHistory[n.id]=n.entries||[];});}
+function getRoomsForUser(){const all=Object.values(rooms);if(currentRole==='cameriera')return all.filter(r=>!r.assigned_to||r.assigned_to===currentUser.id);return all;}
+function setFilter(f,el){currentFilter=f;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderRooms();}
+function renderRooms(){
+  const list=document.getElementById('rooms-list');
+  let filtered=getRoomsForUser();
+  if(currentFilter!=='all')filtered=filtered.filter(r=>r.status===currentFilter);
+  filtered.sort((a,b)=>({checkout:0,todo:1,cleaning:2,done:3,blocked:4}[a.status]??5)-({checkout:0,todo:1,cleaning:2,done:3,blocked:4}[b.status]??5));
+  if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="emoji">✨</div><p>Nessuna camera in questa categoria</p></div>';return;}
+  list.innerHTML=filtered.map(r=>{
+    const s=SL[r.status]||SL.todo,isLive=r.status==='cleaning';
+    const hasFault=(faults[r.id]||[]).some(f=>!f.resolved);
+    const cd=Object.values(r.checklist||{}).filter(Boolean).length,ct=checklistTemplate.length;
+    const checkHtml=ct>0&&r.status==='cleaning'?`<span>✅${cd}/${ct}</span>`:'';
+    return `<div class="room-card ${s.cls}" onclick="openModal('${r.id}')"><div class="room-number">${r.number}</div><div class="room-info"><div class="room-type">${r.type}</div><div class="room-meta"><span>📍 P.${r.floor}</span>${r.assigned_name?`<span class="assigned-to">👤 ${r.assigned_name}</span>`:''}${r.status==='checkout'?'<span class="priority-high">⚡ Priorità</span>':''}${hasFault?'<span class="fault-badge">🔧 Guasto</span>':''}${checkHtml}${r.note?'<span>📝</span>':''}</div></div><div class="status-badge ${s.badge}">${isLive?'<span class="pulse"></span>':s.icon} ${s.label}</div></div>`;
+  }).join('');
+}
+function updateStats(){const all=getRoomsForUser();document.getElementById('stat-todo').textContent=all.filter(r=>r.status==='todo'||r.status==='checkout').length;document.getElementById('stat-doing').textContent=all.filter(r=>r.status==='cleaning').length;document.getElementById('stat-done').textContent=all.filter(r=>r.status==='done').length;document.getElementById('stat-total').textContent=all.length;}
+function renderAdminRooms(){
+  if(currentRole!=='manager'&&currentRole!=='supervisore')return;
+  const list=document.getElementById('rooms-admin-list'),all=Object.values(rooms).sort((a,b)=>a.number.localeCompare(b.number));
+  if(!all.length){list.innerHTML='<div style="color:var(--text2);font-size:13px">Nessuna camera</div>';return;}
+  list.innerHTML=all.map(r=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;justify-content:space-between"><span style="font-family:'DM Mono',monospace;font-weight:600">${r.number}</span><span style="font-size:13px;color:var(--text2)">${r.type} · Piano ${r.floor}</span><span style="cursor:pointer" onclick="deleteRoom('${r.id}')">🗑️</span></div>`).join('');
+}
+async function addRoom(){
+  const number=document.getElementById('new-room-num').value.trim(),type=document.getElementById('new-room-type').value,floor=parseInt(document.getElementById('new-room-floor').value)||1;
+  if(!number){showToast('⚠️ Inserisci un numero');return;}
+  await sb.from('rooms').upsert({id:'r'+number,number,type,floor,status:'todo',note:'',assigned_to:'',assigned_name:'',checklist:{},started_at:null});
+  document.getElementById('new-room-num').value='';showToast('✅ Camera aggiunta');loadRooms();
+}
+async function deleteRoom(id){if(!confirm('Eliminare questa camera?'))return;await sb.from('rooms').delete().eq('id',id);showToast('🗑️ Eliminata');}
+function openModal(roomId){
+  modalRoomId=roomId;modalPendingStatus=null;
+  const r=rooms[roomId],s=SL[r.status]||SL.todo;
+  document.getElementById('modal-room-num').textContent=r.number;
+  document.getElementById('modal-room-type').textContent=`${r.type} · Piano ${r.floor}`;
+  document.getElementById('modal-current-badge').innerHTML=`<div class="status-badge ${s.badge}">${s.icon} ${s.label}</div>`;
+  document.getElementById('modal-assigned-info').textContent=r.assigned_name?`Assegnata a: ${r.assigned_name}`:'Non assegnata';
+  document.getElementById('modal-note').value=r.note||'';
+  const canEdit=currentRole==='manager'||currentRole==='supervisore'||(currentRole==='cameriera'&&(!r.assigned_to||r.assigned_to===currentUser.id));
+  const actions=document.getElementById('modal-actions');
+  if(canEdit){actions.innerHTML='<button class="action-btn action-todo" onclick="setPendingStatus(\'todo\')">⚪ Da fare</button><button class="action-btn action-cleaning" onclick="setPendingStatus(\'cleaning\')">🧹 In pulizia</button><button class="action-btn action-checkout" onclick="setPendingStatus(\'checkout\')">🟠 Partenza</button><button class="action-btn action-blocked" onclick="setPendingStatus(\'blocked\')">🔴 Fermata</button><button class="action-btn action-done" onclick="setPendingStatus(\'done\')">✅ Segna come PULITA</button>';highlightStatus(r.status);}
+  else actions.innerHTML='<div style="color:var(--text2);font-size:13px;grid-column:1/-1">Non hai il permesso di modificare questa camera.</div>';
+  const ass=document.getElementById('assign-section');
+  if(currentRole==='manager'||currentRole==='supervisore'){ass.style.display='block';document.getElementById('assign-select').value=r.assigned_to||'';}else ass.style.display='none';
+  renderModalChecklist(r);renderNotesHistory(roomId);renderFaultsList(roomId);
+  switchModalTab('stato',document.querySelector('.modal-tab'));
+  document.getElementById('room-modal').classList.add('open');
+}
+function switchModalTab(name,el){document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.modal-section').forEach(s=>s.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('msec-'+name).classList.add('active');}
+function setPendingStatus(s){modalPendingStatus=s;highlightStatus(s);}
+function highlightStatus(s){const m={todo:'action-todo',cleaning:'action-cleaning',done:'action-done',blocked:'action-blocked',checkout:'action-checkout'};document.querySelectorAll('.action-btn').forEach(b=>{b.style.opacity='.5';b.style.transform='';});const a=document.querySelector('.'+m[s]);if(a){a.style.opacity='1';a.style.transform='scale(1.02)';}}
+function renderModalChecklist(r){
+  const container=document.getElementById('checklist-items');
+  if(!checklistTemplate.length){container.innerHTML='<div style="color:var(--text2);font-size:13px">Nessun elemento. Aggiungili da Impostazioni.</div>';return;}
+  const checked=r.checklist||{},total=checklistTemplate.length,done=checklistTemplate.filter(i=>checked[i.id]).length;
+  document.getElementById('checklist-bar').style.width=total?Math.round(done/total*100)+'%':'0%';
+  document.getElementById('checklist-pct').textContent=`${done}/${total}`;
+  container.innerHTML=checklistTemplate.map(item=>`<div class="checklist-item ${checked[item.id]?'checked':''}" onclick="toggleCheck('${r.id}','${item.id}')"><input type="checkbox" ${checked[item.id]?'checked':''} onclick="event.stopPropagation();toggleCheck('${r.id}','${item.id}')"><label>${item.text}</label></div>`).join('');
+}
+async function toggleCheck(roomId,itemId){const r=rooms[roomId];if(!r.checklist)r.checklist={};r.checklist[itemId]=!r.checklist[itemId];await sb.from('rooms').update({checklist:r.checklist}).eq('id',roomId);renderModalChecklist(r);}
+function renderNotesHistory(roomId){const hist=notesHistory[roomId]||[],c=document.getElementById('modal-notes-history');if(!hist.length){c.innerHTML='<div style="color:var(--text2);font-size:12px">Nessuna nota precedente</div>';return;}c.innerHTML=hist.slice().reverse().slice(0,5).map(n=>{const d=new Date(n.ts);return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.5">${n.text}<div style="font-size:11px;color:var(--text2);margin-top:4px">${n.author} · ${d.toLocaleDateString('it-IT')} ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</div></div>`;}).join('');}
+function renderFaultsList(roomId){const list=document.getElementById('faults-list'),items=(faults[roomId]||[]).filter(f=>!f.resolved);if(!items.length){list.innerHTML='<div style="color:var(--text2);font-size:13px">Nessun guasto attivo 🎉</div>';return;}list.innerHTML=items.map(f=>`<div class="fault-item"><div class="fault-text">${f.desc}<div class="fault-meta">Segnalato da ${f.author} · ${new Date(f.ts).toLocaleDateString('it-IT')}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="fault-priority fp-${f.priority}">${f.priority.toUpperCase()}</span><span style="font-size:20px;cursor:pointer" onclick="resolveFault('${roomId}','${f.id}')">✅</span></div></div>`).join('');}
+async function addFault(){const desc=document.getElementById('fault-desc').value.trim(),priority=document.getElementById('fault-priority').value;if(!desc){showToast('⚠️ Descrivi il guasto');return;}const fault={id:'f'+Date.now(),desc,priority,resolved:false,ts:Date.now(),author:currentUser.name||'Utente'};if(!faults[modalRoomId])faults[modalRoomId]=[];faults[modalRoomId].push(fault);await sb.from('faults').upsert({id:modalRoomId,items:faults[modalRoomId]});document.getElementById('fault-desc').value='';renderFaultsList(modalRoomId);renderReports();renderRooms();showToast('🔧 Guasto segnalato');}
+async function resolveFault(roomId,faultId){const f=(faults[roomId]||[]).find(x=>x.id===faultId);if(f)f.resolved=true;await sb.from('faults').upsert({id:roomId,items:faults[roomId]});renderFaultsList(roomId);renderReports();renderRooms();showToast('✅ Guasto risolto');}
+async function saveModalChanges(){
+  const r=rooms[modalRoomId],note=document.getElementById('modal-note').value.trim(),newStatus=modalPendingStatus||r.status;
+  if(note&&note!==(r.note||'')){if(!notesHistory[modalRoomId])notesHistory[modalRoomId]=[];notesHistory[modalRoomId].push({text:note,author:currentUser.name||'Utente',ts:Date.now()});await sb.from('notes_history').upsert({id:modalRoomId,entries:notesHistory[modalRoomId]});}
+  let assigned_to=r.assigned_to,assigned_name=r.assigned_name;
+  if(currentRole==='manager'||currentRole==='supervisore'){assigned_to=document.getElementById('assign-select').value;assigned_name=assigned_to?(staffMembers[assigned_to]?.name||''):'';}
+  let started_at=r.started_at;
+  if(newStatus==='cleaning'&&r.status!=='cleaning')started_at=Date.now();
+  let duration=null;
+  if(newStatus==='done'&&r.status==='cleaning'&&started_at)duration=Math.max(1,Math.round((Date.now()-started_at)/60000));
+  let checklist=r.checklist||{};
+  if(newStatus==='todo'){checklist={};started_at=null;}
+  const changed=newStatus!==r.status||note!==(r.note||'');
+  await sb.from('rooms').update({status:newStatus,note,assigned_to,assigned_name,started_at,checklist,updated_at:Date.now(),updated_by_name:currentUser.name||'Utente'}).eq('id',modalRoomId);
+  if(changed){await sb.from('activity').insert({room_id:modalRoomId,room_number:r.number,room_type:r.type,action:newStatus,actor_name:currentUser.name||'Utente',actor_role:currentRole,duration,ts:Date.now()});showToast(`✅ Camera ${r.number} aggiornata`);}else showToast('Salvato');
+  closeModal();
+}
+function closeModal(){document.getElementById('room-modal').classList.remove('open');modalRoomId=null;}
+function closeModalOutside(e){if(e.target===document.getElementById('room-modal'))closeModal();}
+function toggleAddStaff(){const f=document.getElementById('add-staff-form');f.style.display=f.style.display==='none'?'block':'none';}
+async function addStaffMember(){const name=document.getElementById('staff-name').value.trim(),phone=document.getElementById('staff-phone').value.trim(),email=document.getElementById('staff-email').value.trim(),notes=document.getElementById('staff-notes').value.trim();if(!name){showToast('⚠️ Inserisci un nome');return;}await sb.from('staff').insert({id:'sm_'+Date.now(),name,phone,email,notes,role:'cameriera',added_at:Date.now()});document.getElementById('staff-name').value='';document.getElementById('staff-phone').value='';document.getElementById('staff-email').value='';document.getElementById('staff-notes').value='';document.getElementById('add-staff-form').style.display='none';showToast('✅ Cameriera aggiunta');}
+async function deleteStaff(id){if(!confirm('Rimuovere questa persona?'))return;await sb.from('staff').delete().eq('id',id);showToast('🗑️ Rimossa');}
+function renderStaff(){
+  const list=document.getElementById('staff-list'),members=Object.values(staffMembers);
+  if(!members.length){list.innerHTML='<div class="empty-state"><div class="emoji">👩‍🔧</div><p>Nessuna cameriera aggiunta</p></div>';return;}
+  const todayShifts=getTodayShifts();
+  list.innerHTML=members.map(m=>{
+    const initials=m.name.split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2);
+    const ts=todayShifts[m.id]||'off';
+    const shiftLabel={mattina:'☀️ Mattina',pomeriggio:'🌙 Pomeriggio',riposo:'😴 Riposo',off:'–'}[ts]||'–';
+    const shiftColor={mattina:'var(--yellow)',pomeriggio:'var(--accent)',riposo:'var(--red)',off:'var(--text2)'}[ts];
+    const assigned=Object.values(rooms).filter(r=>r.assigned_to===m.id&&r.status!=='done').length;
+    const doneToday=activityLog.filter(a=>a.actor_name===m.name&&a.action==='done'&&isToday(a.ts)).length;
+    return `<div class="staff-card"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="staff-avatar">${initials}</div><div style="flex:1"><div style="font-size:15px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--text2)">${[m.phone,m.email].filter(Boolean).join(' · ')||'Nessun contatto'}</div></div>${currentRole==='manager'||currentRole==='supervisore'?`<span style="cursor:pointer;font-size:20px" onclick="deleteStaff('${m.id}')">🗑️</span>`:''}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:${m.notes?'10px':'0'}"><div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue)">${assigned}</div><div style="font-size:10px;color:var(--text2)">In carico</div></div><div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green)">${doneToday}</div><div style="font-size:10px;color:var(--text2)">Fatte oggi</div></div><div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-size:13px;font-weight:700;color:${shiftColor}">${shiftLabel}</div><div style="font-size:10px;color:var(--text2)">Turno oggi</div></div></div>${m.notes?`<div style="font-size:12px;color:var(--text2);padding:8px 10px;background:var(--bg3);border-radius:8px">📌 ${m.notes}</div>`:''}</div>`;
+  }).join('');
+}
+function populateAssignSelect(){const sel=document.getElementById('assign-select');sel.innerHTML='<option value="">— Non assegnata —</option>'+Object.values(staffMembers).map(m=>`<option value="${m.id}">${m.name}</option>`).join('');}
+function getWeekNum(d){const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-day);const y=new Date(Date.UTC(date.getUTCFullYear(),0,1));return Math.ceil((((date-y)/86400000)+1)/7);}
+function getWeekKey(off=0){const d=new Date();d.setDate(d.getDate()+off*7);return `${d.getFullYear()}-W${String(getWeekNum(d)).padStart(2,'0')}`;}
+function getWeekDates(off=0){const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7)+off*7);return DAYS.map((_,i)=>{const dd=new Date(d);dd.setDate(d.getDate()+i);return dd;});}
+function prevWeek(){currentWeekOffset--;renderShifts();}
+function nextWeek(){currentWeekOffset++;renderShifts();}
+function getTodayShifts(){const wk=getWeekKey(0),dayIdx=((new Date().getDay()+6)%7),dayKey=DAYS[dayIdx],result={};Object.values(staffMembers).forEach(m=>{result[m.id]=shifts[m.id]?.[wk]?.[dayKey]||'off';});return result;}
+function renderShifts(){
+  const wk=getWeekKey(currentWeekOffset),dates=getWeekDates(currentWeekOffset),members=Object.values(staffMembers);
+  document.getElementById('week-label').textContent=`${dates[0].toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})} – ${dates[6].toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})}`;
+  const c=document.getElementById('shifts-grid');
+  if(!members.length){c.innerHTML='<div class="empty-state"><div class="emoji">📅</div><p>Nessuna cameriera ancora</p></div>';return;}
+  const canEdit=currentRole==='manager'||currentRole==='supervisore';
+  c.innerHTML=members.map(m=>{
+    const ms=shifts[m.id]?.[wk]||{},initials=m.name.split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2);
+    const cells=DAYS.map((day,i)=>{const val=ms[day]||'off',lbl={mattina:'M',pomeriggio:'P',riposo:'R',off:'–'}[val]||'–';return `<div class="shift-day"><div class="shift-day-label">${day.slice(0,2)}<br>${dates[i].getDate()}</div><div class="shift-cell ${val}" ${canEdit?`onclick="cycleShift('${m.id}','${wk}','${day}')"`:''}>${lbl}</div></div>`;}).join('');
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px"><div style="font-size:14px;font-weight:600;margin-bottom:10px"><span style="background:var(--accent);color:#fff;border-radius:50%;padding:2px 8px;font-size:12px;margin-right:8px">${initials}</span>${m.name}</div><div class="shift-week">${cells}</div></div>`;
+  }).join('');
+}
+async function cycleShift(uid,wk,day){if(!shifts[uid])shifts[uid]={};if(!shifts[uid][wk])shifts[uid][wk]={};const cur=shifts[uid][wk][day]||'off',idx=SHIFT_CYCLE.indexOf(cur);shifts[uid][wk][day]=SHIFT_CYCLE[(idx+1)%SHIFT_CYCLE.length];await sb.from('shifts').upsert({id:uid,data:shifts[uid]});renderShifts();renderStaff();}
+function renderChecklistTemplate(){const list=document.getElementById('checklist-template-list');if(!checklistTemplate.length){list.innerHTML='<div style="color:var(--text2);font-size:13px;margin-bottom:8px">Nessun elemento ancora</div>';return;}list.innerHTML=checklistTemplate.map((item,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px"><span style="font-size:13px;flex:1;color:var(--text)">${item.text}</span><span style="cursor:pointer;color:var(--text2);font-size:16px" onclick="deleteChecklistItem(${i})">✕</span></div>`).join('');}
+async function addChecklistTemplate(){const inp=document.getElementById('new-checklist-item'),text=inp.value.trim();if(!text){showToast('⚠️ Scrivi qualcosa');return;}checklistTemplate.push({id:'c'+Date.now(),text});await sb.from('checklist_template').upsert({id:'default',items:checklistTemplate});inp.value='';renderChecklistTemplate();showToast('✅ Aggiunto alla checklist');}
+async function deleteChecklistItem(idx){checklistTemplate.splice(idx,1);await sb.from('checklist_template').upsert({id:'default',items:checklistTemplate});renderChecklistTemplate();}
+function isToday(ts){const d=new Date(ts),t=new Date();return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear();}
+function fmtTime(m){if(!m||m<=0)return '–';return m<60?m+' min':Math.floor(m/60)+'h '+(m%60)+'min';}
+function timeClass(m){if(!m)return '';return m<25?'time-good':m<45?'time-avg':'time-slow';}
+function renderReports(){
+  const completed=activityLog.filter(a=>a.action==='done'&&a.duration>0);
+  const avg=arr=>arr.length?Math.round(arr.reduce((s,a)=>s+(a.duration||0),0)/arr.length):null;
+  const fermata=completed.filter(a=>{const r=rooms[a.room_id];return r&&(r.type==='Standard'||r.type==='Superior');});
+  const checkout=completed.filter(a=>{const r=rooms[a.room_id];return r&&(r.type==='Suite'||r.type==='Junior Suite'||r.type==='Deluxe');});
+  document.getElementById('rpt-avg-fermata').innerHTML=`<span class="${timeClass(avg(fermata))}">${fmtTime(avg(fermata))}</span>`;
+  document.getElementById('rpt-avg-checkout').innerHTML=`<span class="${timeClass(avg(checkout))}">${fmtTime(avg(checkout))}</span>`;
+  document.getElementById('rpt-avg-all').innerHTML=`<span class="${timeClass(avg(completed))}">${fmtTime(avg(completed))}</span>`;
+  const barsC=document.getElementById('rpt-staff-bars');
+  const staffNames=[...new Set(completed.map(a=>a.actor_name))];
+  if(!staffNames.length){barsC.innerHTML='<div style="color:var(--text2);font-size:13px">Dati insufficienti — si accumulano man mano.</div>';}
+  else{const sa=staffNames.map(n=>{const e=completed.filter(a=>a.actor_name===n);return{name:n,avg:avg(e),count:e.length};}).sort((a,b)=>(a.avg||999)-(b.avg||999));const maxA=Math.max(...sa.map(s=>s.avg||0),1);barsC.innerHTML=sa.map(s=>`<div class="rbar-row"><div class="rbar-name">${s.name.split(' ')[0]}</div><div class="rbar"><div class="rbar-fill ${timeClass(s.avg)}" style="width:${Math.round((s.avg||0)/maxA*100)}%"></div></div><div class="rbar-val">${fmtTime(s.avg)}</div></div><div style="font-size:10px;color:var(--text2);margin-bottom:10px;padding-left:88px">${s.count} stanze</div>`).join('');}
+  document.getElementById('rpt-done-today').textContent=activityLog.filter(a=>a.action==='done'&&isToday(a.ts)).length;
+  document.getElementById('rpt-faults-open').textContent=Object.values(faults).reduce((s,arr)=>s+arr.filter(f=>!f.resolved).length,0);
+  document.getElementById('rpt-notes-count').textContent=Object.values(rooms).filter(r=>r.note).length;
+  document.getElementById('rpt-todo-left').textContent=Object.values(rooms).filter(r=>r.status==='todo'||r.status==='checkout').length;
+  const allFaults=[];Object.entries(faults).forEach(([rid,items])=>items.filter(f=>!f.resolved).forEach(f=>allFaults.push({...f,roomNumber:rooms[rid]?.number||rid})));allFaults.sort((a,b)=>({alta:0,media:1,bassa:2}[a.priority]??3)-({alta:0,media:1,bassa:2}[b.priority]??3));
+  const fc=document.getElementById('rpt-fault-list');
+  if(!allFaults.length){fc.innerHTML='<div style="color:var(--text2);font-size:13px">Nessun guasto aperto 🎉</div>';}
+  else{fc.innerHTML=allFaults.map(f=>`<div class="fault-item"><div class="fault-text"><strong>Cam. ${f.roomNumber}</strong> – ${f.desc}<div class="fault-meta">${f.author} · ${new Date(f.ts).toLocaleDateString('it-IT')}</div></div><span class="fault-priority fp-${f.priority}">${f.priority.toUpperCase()}</span></div>`).join('');}
+}
+function renderActivity(){
+  const list=document.getElementById('activity-list');
+  if(!activityLog.length){list.innerHTML='<div class="empty-state"><div class="emoji">📋</div><p>Nessuna attività ancora</p></div>';return;}
+  const icons={todo:'⚪',cleaning:'🧹',done:'✅',blocked:'🔒',checkout:'🟠'};
+  list.innerHTML=activityLog.slice(0,40).map(a=>{const d=new Date(a.ts);return `<div class="activity-item"><div class="activity-icon">${icons[a.action]||'📌'}</div><div class="activity-text"><strong>Camera ${a.room_number}</strong> → ${SL[a.action]?.label||a.action}${a.duration?`<span style="color:var(--green);font-family:'DM Mono',monospace;font-size:11px"> ⏱ ${fmtTime(a.duration)}</span>`:''}<br><span style="color:var(--text2)">${a.actor_name} (${a.actor_role})</span></div><div class="activity-time">${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}<br>${d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})}</div></div>`;}).join('');
+}
+function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.getElementById('nav-'+name).classList.add('active');if(name==='reports')renderReports();if(name==='shifts')renderShifts();}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
