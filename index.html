@@ -1,4 +1,4 @@
-                          <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -392,15 +392,29 @@ function showApp(){
   subscribeAll();
 }
 function subscribeAll(){
-  sb.channel('db-all')
-    .on('postgres_changes',{event:'*',schema:'public',table:'rooms'},()=>{ loadRooms(); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'activity'},()=>{ loadActivity(); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'staff'},()=>{ loadStaff(); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'shifts'},()=>{ loadShifts(); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'faults'},()=>{ loadFaults(); renderReports(); if(modalRoomId) renderFaultsList(modalRoomId); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'notes_history'},()=>{ loadNotesHistory(); })
-    .subscribe((status)=>{ console.log('Realtime status:', status); });
+  // Carica dati iniziali
   loadRooms();loadActivity();loadStaff();loadShifts();loadChecklistTemplate();loadFaults();loadNotesHistory();
+
+  // Realtime via Supabase
+  if(window._realtimeChannel){ try{ sb.removeChannel(window._realtimeChannel); }catch(e){} }
+  window._realtimeChannel = sb.channel('ch-'+Date.now())
+    .on('postgres_changes',{event:'*',schema:'public',table:'rooms'},()=>loadRooms())
+    .on('postgres_changes',{event:'*',schema:'public',table:'activity'},()=>loadActivity())
+    .on('postgres_changes',{event:'*',schema:'public',table:'staff'},()=>loadStaff())
+    .on('postgres_changes',{event:'*',schema:'public',table:'shifts'},()=>loadShifts())
+    .on('postgres_changes',{event:'*',schema:'public',table:'faults'},()=>{ loadFaults(); renderReports(); })
+    .subscribe((status)=>{
+      if(status==='CLOSED'||status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
+        setTimeout(()=>subscribeAll(), 2000);
+      }
+    });
+
+  // Polling ogni 5 secondi come backup — aggiorna sempre anche se il realtime cade
+  if(window._pollTimer) clearInterval(window._pollTimer);
+  window._pollTimer = setInterval(()=>{
+    loadRooms();
+    loadActivity();
+  }, 5000);
 }
 async function loadRooms(){const{data}=await sb.from('rooms').select('*');rooms={};(data||[]).forEach(r=>{rooms[r.id]={...r,checklist:r.checklist||{}};});renderRooms();renderAdminRooms();updateStats();renderReports();}
 async function loadActivity(){const{data}=await sb.from('activity').select('*').order('ts',{ascending:false}).limit(80);activityLog=data||[];renderActivity();renderReports();}
